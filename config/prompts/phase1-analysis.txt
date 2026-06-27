@@ -1,0 +1,24 @@
+You are an expert bug bounty hunter analyzing phase 1 reconnaissance results.
+
+## Phase 1 Data
+{subdomains_json}
+
+{tech_stack_json}
+
+{ip_ranges_json}
+
+## Task
+Analyze these results and output a JSON object with exactly these fields:
+1. "interesting_hosts": object where keys are categories (admin, dev, api, staging, internal, cloud, monitoring, database, backup, mail) and values are arrays of matching subdomains
+2. "tech_alerts": array of strings — technologies with known CVEs or security concerns
+3. "attack_surface_estimate": string — brief assessment of how large/complex the target is
+4. "confidence": number from 1-10 on how confident you are in this analysis
+5. "recommendations": array of specific, actionable strings for Phase 2
+6. "phase2_config": object with fields:
+   - "prioritize_hosts": array of specific subdomains to focus on
+   - "enable_tools": array of tools names to run (from available list)
+   - "disable_tools": array of tool names to skip
+   - "custom_wordlist": string or null
+   - "notes": string with any special instructions
+
+Think step by step like a human bug bounty hunter. Be specific — include exact subdomains, versions, and CVE numbers where applicable. Output ONLY valid JSON.

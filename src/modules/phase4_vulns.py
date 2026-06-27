@@ -126,13 +126,6 @@ class Phase4:
             }
         }
 
-        def analyze_fn(phase_data):
-            from src.analyzer import ReconAnalyzer
-            analyzer = ReconAnalyzer(str(out), target)
-            return analyzer.analyze_phase4(phase_data)
-
-        self.analyze_fn = analyze_fn
-
         return results
 
     def _nuclei_scan(self, orch, live_file, vulns_dir):

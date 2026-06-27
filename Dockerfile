@@ -81,7 +81,7 @@ RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
     go install -v github.com/tomnomnom/gf@latest && \
     go install -v github.com/tomnomnom/unfurl@latest && \
     go install -v github.com/tomnomnom/anew@latest && \
-    go install -v github.com/tomnomnom/hackrawler@latest && \
+    go install -v github.com/hakluke/hakrawler@latest && \
     go install -v github.com/tomnomnom/meg@latest && \
     go install -v github.com/lc/gau/v2/cmd/gau@latest && \
     go install -v github.com/lc/subjs@latest && \

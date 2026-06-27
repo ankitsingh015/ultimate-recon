@@ -43,10 +43,6 @@ class Phase1:
 
         print(f"\n  Launching {total_tasks} parallel tasks...\n")
 
-        passive_tools = [
-            ("subfinder", f"subfinder -d {target} -all -recursive -o {raw}/subfinder.txt 2>/dev/null; cat {raw}/subfinder.txt 2>/dev/null", "subfinder.txt"),
-        ]
-
         with ThreadPoolExecutor(max_workers=min(orch.args.threads, total_tasks)) as executor:
             futures = {}
 
@@ -74,8 +70,13 @@ class Phase1:
             futures[executor.submit(run_tool, "hackertarget",
                 f"curl -s 'https://api.hackertarget.com/hostsearch/?q={target}' 2>/dev/null | cut -d',' -f1 | sort -u | tee {raw}/hackertarget.txt", "hackertarget.txt")] = "hackertarget"
 
+            cc_indexes = "CC-MAIN-2025-04 CC-MAIN-2024-42 CC-MAIN-2024-22 CC-MAIN-2024-18 CC-MAIN-2024-10".split()
+            cc_cmds = " && ".join(
+                f"curl -s 'https://index.commoncrawl.org/{idx}-index?url=*.{target}&output=json' 2>/dev/null | jq -r '.url' 2>/dev/null"
+                for idx in cc_indexes
+            )
             futures[executor.submit(run_tool, "commoncrawl",
-                f"curl -s 'https://index.commoncrawl.org/CC-MAIN-2024-{time.strftime('%j')}-index?url=*.{target}&output=json' 2>/dev/null | jq -r '.url' 2>/dev/null | sed -e 's_https*://__' -e 's/\\/.*//g' | sort -u | tee {raw}/commoncrawl.txt", "commoncrawl.txt")] = "commoncrawl"
+                f"({cc_cmds}) 2>/dev/null | sed -e 's_https*://__' -e 's/\\/.*//g' | sort -u | tee {raw}/commoncrawl.txt", "commoncrawl.txt")] = "commoncrawl"
 
             if api_keys.get("virustotal"):
                 futures[executor.submit(run_tool, "virustotal",
@@ -130,10 +131,10 @@ class Phase1:
             perm_futures = {}
             with ThreadPoolExecutor(max_workers=3) as pexec:
                 perm_futures[pexec.submit(orch.run_command,
-                    f"cat {subdomain_file} 2>/dev/null | alterx -enrich 2>/dev/null | dnsx -silent -a -resp-only 2>/dev/null | sort -u | tee {perms_out}", 600)] = "permutations"
+                    f"cat {subdomain_file} 2>/dev/null | alterx -enrich 2>/dev/null | dnsx -silent -a -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u | tee {perms_out}", 600)] = "permutations"
 
                 perm_futures[pexec.submit(orch.run_command,
-                    f"cat {subdomain_file} 2>/dev/null | shuffledns -d {target} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -silent 2>/dev/null | sort -u | tee {brute_out}", 600)] = "bruteforce"
+                    f"cat {subdomain_file} 2>/dev/null | shuffledns -d {target} -r wordlists/resolvers.txt -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -silent 2>/dev/null | sort -u | tee {brute_out}", 600)] = "bruteforce"
 
                 for pf in as_completed(perm_futures):
                     name = perm_futures[pf]
@@ -149,14 +150,14 @@ class Phase1:
 
             print("  [*] Resolving subdomains...")
             resolve_result = orch.run_command(
-                f"cat {raw}/all-subdomains.txt 2>/dev/null | sort -u | dnsx -silent -a -resp-only 2>/dev/null | sort -u | tee {resolved_out}",
+                f"cat {raw}/all-subdomains.txt 2>/dev/null | sort -u | dnsx -silent -a -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u | tee {resolved_out}",
                 300
             )
 
         print("  [*] Running ASN + IP discovery...")
         asn_out = raw / "asn-ips.txt"
         asn_result = orch.run_command(
-            f"asnmap -d {target} 2>/dev/null | dnsx -silent -resp-only 2>/dev/null | sort -u | tee {asn_out}",
+            f"asnmap -d {target} 2>/dev/null | dnsx -silent -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u | tee {asn_out}",
             300
         )
         if asn_result.stdout:
@@ -205,12 +206,5 @@ class Phase1:
             "ips": len(all_ips),
             "asn_ranges": len(all_asn)
         }
-
-        def analyze_fn(phase_data):
-            from src.analyzer import ReconAnalyzer
-            analyzer = ReconAnalyzer(str(out), target)
-            return analyzer.analyze_phase1(phase_data)
-
-        self.analyze_fn = analyze_fn
 
         return results

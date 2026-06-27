@@ -1,0 +1,26 @@
+You are an expert bug bounty hunter analyzing deep reconnaissance results.
+
+## Phase 3 Data
+{params_json}
+
+{ports_json}
+
+{js_secrets_json}
+
+{dirs_json}
+
+## Task
+Analyze these results and output a JSON object with exactly these fields:
+1. "param_opportunities": array of objects with "type" (sqli, xss, lfi, ssrf, redirect), "urls" array, "priority" (high/medium/low)
+2. "open_services": array of strings — unusual or interesting open ports/services
+3. "js_findings": array of strings — secrets, endpoints, or interesting patterns found in JS files
+4. "hidden_directories": array of strings — interesting directories discovered
+5. "cloud_assets": array of strings — any cloud storage or services found
+6. "recommendations": array of strings for Phase 4
+7. "phase4_config": object with fields:
+   - "prioritize_vulns": array of vulnerability types to test first
+   - "specific_urls": array of URLs to test
+   - "enable_tools": array of tool names
+   - "notes": string
+
+Output ONLY valid JSON.

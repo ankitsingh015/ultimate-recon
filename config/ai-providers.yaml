@@ -1,0 +1,28 @@
+default_provider: opencode
+
+providers:
+  opencode:
+    enabled: true
+    priority: 1
+    description: "Uses this terminal session as the AI backend. No API keys needed."
+
+  openai:
+    enabled: false
+    api_key_env: OPENAI_API_KEY
+    model: gpt-4o
+    priority: 2
+    description: "OpenAI GPT-4o / GPT-4"
+
+  anthropic:
+    enabled: false
+    api_key_env: ANTHROPIC_API_KEY
+    model: claude-3-5-sonnet-20241022
+    priority: 3
+    description: "Anthropic Claude 3.5 Sonnet"
+
+  ollama:
+    enabled: false
+    endpoint: http://localhost:11434
+    model: llama3
+    priority: 4
+    description: "Local LLMs via Ollama"

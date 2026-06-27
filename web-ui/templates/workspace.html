@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} — Ultimate Recon{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0;">
+    <h1 style="font-size: 20px; color: #fff;">{{ name }}</h1>
+    <div style="display: flex; gap: 8px;">
+        <a href="/workspace/{{ name }}/chat" class="btn">💬 Chat</a>
+        {% if report_exists %}<a href="/workspace/{{ name }}/report" class="btn" target="_blank">📄 Report</a>{% endif %}
+    </div>
+</div>
+
+{% if meta %}
+<div class="card">
+    <h2>Target Info</h2>
+    <table>
+        {% for k, v in meta.items() %}
+        <tr><td style="color:#888;">{{ k }}</td><td>{{ v }}</td></tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Session Timeline (last 200 events)</h2>
+    <div style="max-height: 300px; overflow-y: auto;">
+    {% if session_log %}
+    <table>
+        <tr><th>Time</th><th>Event</th><th>Details</th></tr>
+        {% for evt in session_log %}
+        <tr>
+            <td style="font-size:11px;color:#666;">{{ evt.timestamp[-8:] if evt.timestamp else '?' }}</td>
+            <td>{{ evt.event }}</td>
+            <td style="font-size:11px;color:#888;">
+                {% if evt.target %}{{ evt.target }}{% endif %}
+                {% if evt.phase %}Phase {{ evt.phase }}{% endif %}
+                {% if evt.tool %}Tool: {{ evt.tool }}{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p style="color:#888;">No session events logged yet.</p>
+    {% endif %}
+    </div>
+</div>
+
+{% if screenshots %}
+<div class="card">
+    <h2>Screenshots ({{ screenshots | length }})</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+        {% for ss in screenshots %}
+        <a href="/workspace/{{ name }}/screenshots/{{ ss }}" target="_blank">
+            <img src="/workspace/{{ name }}/screenshots/{{ ss }}" style="width:100%;border-radius:6px;border:1px solid #2a2a3e;">
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if analysis_files %}
+<div class="card">
+    <h2>AI Analysis Files</h2>
+    <table>
+        <tr><th>File</th><th>View</th></tr>
+        {% for af in analysis_files %}
+        <tr>
+            <td>{{ af }}</td>
+            <td><a href="/workspace/{{ name }}/analysis/{{ af }}" target="_blank" style="color:#00ff88;">View</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Raw Results ({{ all_results | length }} files)</h2>
+    <table>
+        <tr><th>File</th><th>Size</th><th>View</th></tr>
+        {% for fname, fsize in all_results | dictsort(by='key') %}
+        <tr>
+            <td>{{ fname }}</td>
+            <td style="color:#888;font-size:11px;">{{ (fsize / 1024) | round(1) }} KB</td>
+            <td><a href="/workspace/{{ name }}/raw/{{ fname }}" target="_blank" style="color:#00ff88;">View</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

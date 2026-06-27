@@ -1,0 +1,26 @@
+You are an expert bug bounty hunter analyzing vulnerability scan results.
+
+## Phase 4 Data
+{vulnerabilities_json}
+
+{nuclei_json}
+
+{custom_tests_json}
+
+## Task
+Analyze these results and output a JSON object with exactly these fields:
+1. "confirmed_vulns": array of objects with:
+   - "type": string (XSS, SQLi, LFI, SSRF, CORS, Open Redirect, Takeover, etc.)
+   - "severity": string (critical, high, medium, low, info)
+   - "url": string
+   - "parameter": string or null
+   - "payload": string or null
+   - "evidence": string
+   - "confidence": number 1-10
+   - "verified": boolean
+2. "false_positives": array of strings — findings that look like false positives
+3. "summary": object with counts per severity
+4. "recommendations": array of strings — what to do next
+5. "report_priority": string — what the user should report first
+
+Output ONLY valid JSON.

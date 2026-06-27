@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Workspaces — Ultimate Recon{% endblock %}
+{% block content %}
+<h1 style="margin: 20px 0; font-size: 20px; color: #fff;">Workspaces</h1>
+{% if workspaces %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+{% for ws in workspaces %}
+<div class="card" style="cursor: pointer; transition: border-color .2s;" onclick="window.location='/workspace/{{ ws.name }}'" onmouseover="this.style.borderColor='#00ff88'" onmouseout="this.style.borderColor='#2a2a3e'">
+    <h2 style="font-size: 16px; text-transform: none; margin-bottom: 8px;">{{ ws.name }}</h2>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #888;">
+        <span>💬 {{ ws.chat_count }} messages</span>
+        {% if ws.has_report %}<span style="color: #00ff88;">📄 Report ready</span>{% endif %}
+    </div>
+    {% if ws.meta %}
+    <div style="margin-top: 10px; font-size: 11px; color: #666;">
+        {% if ws.meta.created %}<div>Created: {{ ws.meta.created[:10] }}</div>{% endif %}
+        {% if ws.meta.phases_completed %}<div>Phases: {{ ws.meta.phases_completed | join(', ') }}</div>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 40px;">
+    <p style="color: #888;">No workspaces yet.</p>
+    <p style="color: #555; font-size: 13px; margin-top: 8px;">Run <code>ultimate-recon example.com</code> to create one.</p>
+</div>
+{% endif %}
+{% endblock %}

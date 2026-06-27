@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Chat — {{ name }}{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0;">
+    <h1 style="font-size: 20px; color: #fff;">💬 Chat — {{ name }}</h1>
+    <a href="/workspace/{{ name }}" class="btn">← Back</a>
+</div>
+
+<div class="card" id="chat-box" style="height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+    <div id="messages"></div>
+    <div id="loading" style="text-align: center; color: #888; padding: 20px;">Loading messages...</div>
+</div>
+
+<div style="display: flex; gap: 8px; margin-top: 12px;">
+    <input id="msg-input" type="text" placeholder="Type a message..." style="flex:1; padding: 12px; border-radius: 6px; background: #12121e; border: 1px solid #2a2a3e; color: #e0e0e0; font-size: 14px; outline: none;">
+    <button id="send-btn" class="btn" style="padding: 12px 24px;">Send</button>
+</div>
+
+<script>
+const name = '{{ name }}';
+const chatBox = document.getElementById('chat-box');
+const msgInput = document.getElementById('msg-input');
+const sendBtn = document.getElementById('send-btn');
+const messagesEl = document.getElementById('messages');
+const loadingEl = document.getElementById('loading');
+
+async function loadMessages() {
+    try {
+        const res = await fetch(`/api/workspace/${name}/chat`);
+        const msgs = await res.json();
+        loadingEl.style.display = 'none';
+        messagesEl.innerHTML = msgs.map(m => {
+            const isUser = m.role === 'user';
+            return `<div style="display:flex;${isUser?'justify-content:flex-end':''}margin:4px 0;">
+                <div style="padding:10px 16px;border-radius:10px;max-width:80%;${
+                    isUser ? 'background:#00ff88;color:#000;' : 'background:#1a1a2e;border:1px solid #2a2a3e;'
+                }">
+                    <div style="font-size:11px;color:${isUser?'#000':'#888'};margin-bottom:4px;">${m.role}</div>
+                    <div>${m.message || '(no message)'}</div>
+                    ${m.timestamp ? `<div style="font-size:10px;color:#666;margin-top:4px;">${new Date(m.timestamp).toLocaleString()}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (e) {
+        loadingEl.textContent = 'Failed to load messages.';
+    }
+}
+
+async function sendMessage() {
+    const msg = msgInput.value.trim();
+    if (!msg) return;
+    msgInput.value = '';
+    try {
+        await fetch(`/api/workspace/${name}/chat`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: msg})
+        });
+        loadMessages();
+    } catch (e) {
+        console.error('Send failed:', e);
+    }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+loadMessages();
+setInterval(loadMessages, 5000);
+</script>
+{% endblock %}

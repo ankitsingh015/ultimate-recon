@@ -225,11 +225,4 @@ class Phase3:
             600
         )
 
-        def analyze_fn(phase_data):
-            from src.analyzer import ReconAnalyzer
-            analyzer = ReconAnalyzer(str(out), target)
-            return analyzer.analyze_phase3(phase_data)
-
-        self.analyze_fn = analyze_fn
-
         return results

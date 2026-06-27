@@ -1,7 +1,7 @@
 import json
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -239,6 +239,62 @@ class ReconDatabase:
             "medium": self.conn.execute("SELECT COUNT(*) FROM findings WHERE target_id=? AND severity='medium'", (target_id,)).fetchone()[0],
             "low": self.conn.execute("SELECT COUNT(*) FROM findings WHERE target_id=? AND severity='low'", (target_id,)).fetchone()[0],
         }
+
+    def log_session_event(self, workspace_dir: str, event: dict):
+        log_path = Path(workspace_dir) / "session.jsonl"
+        event["timestamp"] = datetime.now(timezone.utc).isoformat()
+        with open(log_path, "a") as f:
+            f.write(json.dumps(event) + "\n")
+
+    def log_chat(self, workspace_dir: str, role: str, message: str, metadata: dict = None):
+        chat_path = Path(workspace_dir) / "chat.jsonl"
+        entry = {
+            "role": role,
+            "message": message,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        if metadata:
+            entry["metadata"] = metadata
+        with open(chat_path, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    def get_session_log(self, workspace_dir: str, limit: int = 100) -> list:
+        log_path = Path(workspace_dir) / "session.jsonl"
+        if not log_path.exists():
+            return []
+        events = []
+        with open(log_path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        events.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        pass
+        return events[-limit:]
+
+    def get_chat_log(self, workspace_dir: str, limit: int = 100) -> list:
+        chat_path = Path(workspace_dir) / "chat.jsonl"
+        if not chat_path.exists():
+            return []
+        messages = []
+        with open(chat_path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        messages.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        pass
+        return messages[-limit:]
+
+    def save_ai_decision(self, workspace_dir: str, phase: int, prompt: str, response: dict):
+        decision_dir = Path(workspace_dir) / "ai_decisions"
+        decision_dir.mkdir(parents=True, exist_ok=True)
+        with open(decision_dir / f"phase{phase}-prompt.txt", "w") as f:
+            f.write(prompt)
+        with open(decision_dir / f"phase{phase}-response.json", "w") as f:
+            json.dump(response, f, indent=2)
 
     def close(self):
         self.conn.close()

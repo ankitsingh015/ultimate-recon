@@ -113,16 +113,16 @@ ToolRegistry.register("haktrails", "subdomain", "SecurityTrails subdomain lookup
     needs_api="securitytrails", phase=1)
 
 ToolRegistry.register("alterx", "subdomain", "Subdomain permutation generator",
-    "cat {output_dir}/../all-subdomains.txt 2>/dev/null | alterx -enrich 2>/dev/null | dnsx -silent -a -resp-only 2>/dev/null | sort -u > {output}", timeout=600, phase=1)
+    "cat {output_dir}/../all-subdomains.txt 2>/dev/null | alterx -enrich 2>/dev/null | dnsx -silent -a -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u > {output}", timeout=600, phase=1)
 
 ToolRegistry.register("shuffledns", "subdomain", "Subdomain brute-force with wordlist",
-    "shuffledns -d {target} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -silent 2>/dev/null | sort -u > {output}", timeout=600, phase=1)
+    "shuffledns -d {target} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -r wordlists/resolvers.txt -silent 2>/dev/null | sort -u > {output}", timeout=600, phase=1)
 
 ToolRegistry.register("dnsx", "subdomain", "DNS resolution and validation",
-    "cat {output_dir}/../all-subdomains.txt 2>/dev/null | sort -u | dnsx -silent -a -resp-only 2>/dev/null | sort -u > {output}", timeout=300, phase=1)
+    "cat {output_dir}/../all-subdomains.txt 2>/dev/null | sort -u | dnsx -silent -a -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u > {output}", timeout=300, phase=1)
 
 ToolRegistry.register("asnmap", "ip", "ASN to IP range mapping",
-    "asnmap -d {target} 2>/dev/null | dnsx -silent -resp-only 2>/dev/null | sort -u > {output}", phase=1)
+    "asnmap -d {target} 2>/dev/null | dnsx -silent -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u > {output}", phase=1)
 
 ToolRegistry.register("httpx", "live_host", "HTTP probing and tech detection",
     "httpx -silent -l {output_dir}/../all-subdomains.txt -ports 80,443,8080,8000,8888,8443,3000,5000 -status-code -title -tech-detect -threads 50 -o {output} 2>/dev/null", timeout=600, phase=2)
