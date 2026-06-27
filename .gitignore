@@ -2,7 +2,6 @@
 # SECURITY — NEVER COMMIT THESE
 # ============================================
 .env
-.env.*
 config/api-keys.yaml
 config/api-keys.yml
 
