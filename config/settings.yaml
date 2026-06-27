@@ -1,0 +1,95 @@
+general:
+  threads: 50
+  rate_limit: 100
+  timeout: 30
+  retries: 3
+  stealth: false
+  verbose: true
+  
+phases:
+  phase1:
+    enabled: true
+    parallel_tasks: true
+    subdomains:
+      - subfinder
+      - assetfinder
+      - findomain
+      - amass_passive
+      - amass_active
+      - chaos
+      - crtsh
+      - wayback
+      - virustotal
+      - hackertarget
+      - urlscan
+      - commoncrawl
+      - github
+      - shosubgo
+      - dnsrecon
+      - haktrails
+      - puredns
+      - shuffledns
+    brute_force: true
+    permutations: true
+    asn_discovery: true
+    ip_extraction: true
+    
+  phase2:
+    enabled: true
+    parallel_tasks: true
+    httpx_ports: "80,443,8080,8000,8888,8443,3000,5000"
+    screenshots: true
+    crawl_depth: 3
+    passive_urls: true
+    active_crawl: true
+    tech_detect: true
+    waf_detect: true
+    
+  phase3:
+    enabled: true
+    parallel_tasks: true
+    gf_patterns:
+      - sqli
+      - xss
+      - lfi
+      - ssrf
+      - redirect
+      - rce
+      - idor
+      - debug_logic
+      - takeovers
+      - secrets
+    hidden_params: true
+    dir_bruteforce: true
+    js_analysis: true
+    port_scan: true
+    nuclei_exposures: true
+    cloud_enum: true
+    
+  phase4:
+    enabled: true
+    parallel_tasks: true
+    nuclei_all: true
+    sqlmap: true
+    dalfox: true
+    xss_strike: true
+    lfi_test: true
+    ssrf_test: true
+    cors_test: true
+    open_redirect: true
+    subdomain_takeover: true
+    git_leaks: true
+    ssti_test: true
+    xxe_test: true
+    command_injection: true
+    jwt_test: true
+    
+  phase5:
+    enabled: true
+    generate_report: true
+
+reporting:
+  format: html
+  include_screenshots: true
+  include_raw: false
+  max_findings_per_type: 100

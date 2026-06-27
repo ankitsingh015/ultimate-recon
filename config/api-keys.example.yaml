@@ -1,0 +1,26 @@
+# Ultimate Recon — API Key Configuration (YAML format)
+# Copy to api-keys.yaml and fill in your keys.
+# 
+# cp config/api-keys.example.yaml config/api-keys.yaml
+#
+# SECURITY: api-keys.yaml is in .gitignore — will NEVER be committed.
+# Prefer .env file in the project root for simpler setup.
+
+shodan: ""
+virustotal: ""
+github: ""
+chaos: ""
+securitytrails: ""
+urlscan: ""
+hackertarget: ""
+alienvault: ""
+bevigil: ""
+zoomeye: ""
+facebook: ""
+spyse: ""
+binaryedge: ""
+bufferover: ""
+dnsdb: ""
+whoisxmlapi: ""
+passivetotal: ""
+netlas: ""
