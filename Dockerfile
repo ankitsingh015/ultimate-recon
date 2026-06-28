@@ -1,45 +1,16 @@
-FROM kalilinux/kali-rolling:latest
-
-LABEL description="Ultimate Recon - Complete Bug Bounty Reconnaissance Toolkit"
-LABEL version="1.0"
-LABEL maintainer="ultimate-recon"
+# Stage 1: Builder — compile Go tools only
+FROM kalilinux/kali-rolling:latest AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/root/go
-ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/root/.local/bin:/root/.cargo/bin
-ENV PIP_BREAK_SYSTEM_PACKAGES=1
-ENV NUCLEI_HOME=/root/nuclei-templates
+ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
-SHELL ["/bin/bash", "-c"]
-
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates curl wget git jq yq \
-        build-essential gcc make python3 python3-pip python3-venv \
-        ruby ruby-dev golang-go perl nodejs npm \
-        nmap masscan whois dnsutils netcat-openbsd \
-        libpcap-dev libssl-dev zlib1g-dev \
-        xvfb firefox-esr chromium \
-        openssh-client sshpass \
-        unzip p7zip-full xz-utils \
-        sqlmap wafw00f \
-        dnsrecon dnsenum \
-        whatweb \
-        commix \
-        ffuf \
-        wpscan \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl wget git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip setuptools wheel && \
-    pip3 install --no-cache-dir \
-        requests beautifulsoup4 lxml \
-        jinja2 pyyaml aiohttp aiofiles \
-        tqdm colorama rich \
-        trufflehog arjun waymore uro dirsearch \
-    && rm -rf /root/.cache/pip
-
-RUN curl -sL https://go.dev/dl/go1.22.0.linux-amd64.tar.gz | tar -C /usr/local -xzf - 
+RUN curl -sL https://go.dev/dl/go1.22.0.linux-amd64.tar.gz | tar -C /usr/local -xzf -
 
 RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
     go install -v github.com/tomnomnom/assetfinder@latest && \
@@ -79,18 +50,63 @@ RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
     go install -v github.com/devanshbatham/dalfox/v2@latest && \
     go install -v github.com/gitleaks/gitleaks@latest
 
+# Stage 2: Final — minimal runtime image
+FROM kalilinux/kali-rolling:latest
+
+LABEL description="Ultimate Recon - Complete Bug Bounty Reconnaissance Toolkit"
+LABEL version="1.0"
+LABEL maintainer="ultimate-recon"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV GOPATH=/root/go
+ENV PATH=$PATH:$GOPATH/bin:/root/.local/bin
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+ENV NUCLEI_HOME=/root/nuclei-templates
+
+SHELL ["/bin/bash", "-c"]
+
+# Runtime packages only (no build tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl wget git jq yq \
+    python3 python3-pip \
+    nmap masscan whois dnsutils netcat-openbsd \
+    libpcap-dev libssl-dev zlib1g-dev \
+    xvfb chromium \
+    openssh-client sshpass \
+    unzip xz-utils \
+    sqlmap wafw00f \
+    dnsrecon dnsenum \
+    whatweb commix ffuf wpscan \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/archives/*
+
+# Copy Go binaries from builder (no Go compiler in final image)
+COPY --from=builder /root/go/bin /root/go/bin
+
+# Python packages (pure pip, no compilation needed)
+RUN pip3 install --upgrade pip setuptools wheel --ignore-installed && \
+    pip3 install --no-cache-dir --ignore-installed \
+        requests beautifulsoup4 lxml \
+        jinja2 pyyaml aiohttp aiofiles \
+        tqdm colorama rich \
+        trufflehog arjun waymore uro dirsearch \
+    && rm -rf /root/.cache/pip
+
+# GF patterns
 RUN curl -sL https://raw.githubusercontent.com/tomnomnom/gf/master/gf-completion.bash > /etc/bash_completion.d/gf && \
     mkdir -p ~/.gf && \
-    git clone https://github.com/coffinxp/GFpattren.git /tmp/gf-patterns && \
+    git clone https://github.com/coffinxp/GFpattren.git /tmp/gf-patterns 2>/dev/null && \
     cp /tmp/gf-patterns/*.json ~/.gf/ 2>/dev/null; \
-    git clone https://github.com/1ndianl33t/Gf-Patterns.git /tmp/gf-more && \
+    git clone https://github.com/1ndianl33t/Gf-Patterns.git /tmp/gf-more 2>/dev/null && \
     cp /tmp/gf-more/*.json ~/.gf/ 2>/dev/null; \
-    rm -rf /tmp/gf-patterns /tmp/gf-more
+    rm -rf /tmp/gf-patterns /tmp/gf-more 2>/dev/null
 
+# Nuclei templates
 RUN git clone https://github.com/coffinxp/nuclei-templates /root/nuclei-templates 2>/dev/null || \
     git clone https://github.com/projectdiscovery/nuclei-templates /root/nuclei-templates && \
-    nuclei -update-templates
+    nuclei -update-templates 2>/dev/null || true
 
+# Wordlists and payloads
 RUN git clone --depth 1 https://github.com/danielmiessler/SecLists.git /usr/share/seclists 2>/dev/null; \
     git clone https://github.com/coffinxp/payloads.git /opt/payloads 2>/dev/null; \
     git clone https://github.com/swisskyrepo/PayloadsAllTheThings.git /opt/payloads-all-the-things 2>/dev/null
@@ -98,6 +114,7 @@ RUN git clone --depth 1 https://github.com/danielmiessler/SecLists.git /usr/shar
 RUN git clone https://github.com/coffinxp/scripts.git /opt/scripts 2>/dev/null; \
     git clone https://github.com/EdOverflow/can-i-take-over-xyz.git /opt/can-i-take-over-xyz 2>/dev/null
 
+# GitHub Python tools (install from source)
 RUN \
     git clone https://github.com/s0md3v/Corsy.git /opt/Corsy 2>/dev/null && \
         cd /opt/Corsy && pip3 install -r requirements.txt 2>/dev/null; \
