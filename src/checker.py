@@ -18,7 +18,7 @@ class ToolChecker:
 
     PYTHON_TOOLS = [
         "corsy", "ssrfmap", "s3scanner", "cloud_enum",
-        "waymore", "uro", "jenny", "bxss"
+        "waymore", "uro", "jenny"
     ]
 
     def __init__(self, config_dir: str = "config"):

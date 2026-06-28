@@ -67,7 +67,7 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl wget git jq yq \
     python3 python3-pip \
-    nmap masscan whois dnsutils netcat-openbsd \
+    nmap masscan whois bind9-dnsutils netcat-openbsd \
     libpcap-dev libssl-dev zlib1g-dev \
     xvfb chromium \
     openssh-client sshpass \
@@ -79,9 +79,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/cache/apt/archives/*
 
 # RustScan binary (Rust tool, not available via go install)
-RUN curl -sL "https://github.com/RustScan/RustScan/releases/download/2.4.1/rustscan.deb" -o /tmp/rustscan.deb && \
+RUN curl -sL "https://github.com/RustScan/RustScan/releases/download/2.4.1/rustscan.deb.zip" -o /tmp/rustscan.deb.zip && \
+    cd /tmp && unzip -o rustscan.deb.zip 2>/dev/null && \
     dpkg -i /tmp/rustscan.deb 2>/dev/null; \
-    rm -f /tmp/rustscan.deb
+    rm -f /tmp/rustscan.deb /tmp/rustscan.deb.zip
 
 # Copy Go binaries from builder (no Go compiler in final image)
 COPY --from=builder /root/go/bin /root/go/bin
@@ -93,6 +94,7 @@ RUN pip3 install --upgrade pip setuptools wheel --ignore-installed && \
         jinja2 pyyaml aiohttp aiofiles \
         tqdm colorama rich \
         trufflehog arjun waymore uro dirsearch \
+        cloud-enum \
     && rm -rf /root/.cache/pip
 
 # GF patterns
@@ -112,10 +114,12 @@ RUN git clone https://github.com/coffinxp/nuclei-templates /root/nuclei-template
 # Wordlists and payloads
 RUN git clone --depth 1 https://github.com/danielmiessler/SecLists.git /usr/share/seclists 2>/dev/null; \
     git clone https://github.com/coffinxp/payloads.git /opt/payloads 2>/dev/null; \
-    git clone https://github.com/swisskyrepo/PayloadsAllTheThings.git /opt/payloads-all-the-things 2>/dev/null
+    git clone https://github.com/swisskyrepo/PayloadsAllTheThings.git /opt/payloads-all-the-things 2>/dev/null; \
+    true
 
 RUN git clone https://github.com/coffinxp/scripts.git /opt/scripts 2>/dev/null; \
-    git clone https://github.com/EdOverflow/can-i-take-over-xyz.git /opt/can-i-take-over-xyz 2>/dev/null
+    git clone https://github.com/EdOverflow/can-i-take-over-xyz.git /opt/can-i-take-over-xyz 2>/dev/null; \
+    true
 
 # GitHub Python tools (install from source)
 RUN \
@@ -123,36 +127,24 @@ RUN \
         cd /opt/Corsy && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/chenjj/CORScanner.git /opt/CORScanner 2>/dev/null && \
         cd /opt/CORScanner && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/anspwn/bxss.git /opt/bxss 2>/dev/null && \
-        cd /opt/bxss && pip3 install . 2>/dev/null; \
-    git clone https://github.com/coffinxp/xsscope.git /opt/xsscope 2>/dev/null && \
-        cd /opt/xsscope && pip3 install . 2>/dev/null; \
     git clone https://github.com/swisskyrepo/SSRFmap.git /opt/SSRFmap 2>/dev/null && \
         cd /opt/SSRFmap && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/tarunkant/Gopherus.git /opt/gopherus 2>/dev/null && \
         cd /opt/gopherus && pip3 install . 2>/dev/null; \
     git clone https://github.com/ticarpi/jwt_tool.git /opt/jwt_tool 2>/dev/null && \
         cd /opt/jwt_tool && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/coffinxp/cloud-enum.git /opt/cloud-enum 2>/dev/null && \
-        cd /opt/cloud-enum && pip3 install . 2>/dev/null; \
     git clone https://github.com/devanshbatham/ParamSpider.git /opt/ParamSpider 2>/dev/null && \
         cd /opt/ParamSpider && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/coffinxp/anewer.git /opt/anewer 2>/dev/null && \
-        cd /opt/anewer && pip3 install . 2>/dev/null; \
-    git clone https://github.com/ProjectAnte/dnsgen.git /opt/dnsgen 2>/dev/null && \
+    git clone https://github.com/AlephNullSK/dnsgen.git /opt/dnsgen 2>/dev/null && \
         cd /opt/dnsgen && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/s0md3v/XSStrike.git /opt/XSStrike 2>/dev/null && \
         cd /opt/XSStrike && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/enjoiz/XXEinjector.git /opt/XXEinjector 2>/dev/null; \
-    git clone https://github.com/swisskyrepo/SSTImap.git /opt/SSTImap 2>/dev/null && \
+    git clone https://github.com/vladko312/SSTImap.git /opt/SSTImap 2>/dev/null && \
         cd /opt/SSTImap && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/internetwache/GitTools.git /opt/GitTools 2>/dev/null; \
-    git clone https://github.com/coffinxp/GitGraber.git /opt/GitGraber 2>/dev/null && \
-        cd /opt/GitGraber && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/swisskyrepo/GraphQLmap.git /opt/GraphQLmap 2>/dev/null && \
         cd /opt/GraphQLmap && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/coffinxp/openredirex.git /opt/openredirex 2>/dev/null && \
-        cd /opt/openredirex && pip3 install . 2>/dev/null; \
     git clone https://github.com/ameenmaali/urldedupe.git /opt/urldedupe 2>/dev/null; \
     git clone https://github.com/coffinxp/loxs.git /opt/loxs 2>/dev/null && \
         cd /opt/loxs && pip3 install -r requirements.txt 2>/dev/null; \
@@ -162,27 +154,20 @@ RUN git clone https://github.com/m4ll0k/SecretFinder.git /opt/SecretFinder 2>/de
     cd /opt/SecretFinder && pip3 install -r requirements.txt 2>/dev/null; \
     git clone https://github.com/GerbenJavado/LinkFinder.git /opt/LinkFinder 2>/dev/null && \
     cd /opt/LinkFinder && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/0x240x23elu/JSParser.git /opt/JSParser 2>/dev/null && \
-    cd /opt/JSParser && python3 setup.py install 2>/dev/null; \
-    git clone https://github.com/m4ll0k/JSFScan.git /opt/JSFScan 2>/dev/null && \
-    cd /opt/JSFScan && pip3 install -r requirements.txt 2>/dev/null
-
-RUN git clone https://github.com/dwisiswant0/jsubfinder.git /opt/jsubfinder && \
-    cd /opt/jsubfinder && wget https://raw.githubusercontent.com/dwisiswant0/jsubfinder/master/.jsubfinder.json 2>/dev/null
+    true
 
 RUN mkdir -p /opt/custom-wordlists && \
-    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/coffin%40wp-fuzz.txt" \
+    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/coffin-wp-fuzz.txt" \
         -o /opt/custom-wordlists/wp-fuzz.txt 2>/dev/null; \
     curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/lfi.txt" \
         -o /opt/custom-wordlists/lfi.txt 2>/dev/null; \
-    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/xss-payloads.txt" \
+    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/xss.txt" \
         -o /opt/custom-wordlists/xss-payloads.txt 2>/dev/null; \
-    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/ssrf-payloads.txt" \
+    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/ssrf.txt" \
         -o /opt/custom-wordlists/ssrf-payloads.txt 2>/dev/null; \
-    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/open-redirect.txt" \
-        -o /opt/custom-wordlists/open-redirect.txt 2>/dev/null; \
-    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/sqli-payloads.txt" \
-        -o /opt/custom-wordlists/sqli-payloads.txt 2>/dev/null
+    curl -sL "https://raw.githubusercontent.com/coffinxp/payloads/main/sqli2.txt" \
+        -o /opt/custom-wordlists/sqli-payloads.txt 2>/dev/null; \
+    true
 
 COPY src/ /opt/ultimate-recon/src/
 COPY config/ /opt/ultimate-recon/config/
