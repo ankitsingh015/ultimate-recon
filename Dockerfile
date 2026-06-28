@@ -7,7 +7,7 @@ LABEL maintainer="ultimate-recon"
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/root/go
-ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/root/.local/bin:/root/.cargo/bin:/opt/venv/bin
+ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/root/.local/bin:/root/.cargo/bin
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 ENV NUCLEI_HOME=/root/nuclei-templates
 
@@ -36,33 +36,8 @@ RUN pip3 install --upgrade pip setuptools wheel && \
         requests beautifulsoup4 lxml \
         jinja2 pyyaml aiohttp aiofiles \
         tqdm colorama rich \
-        trufflehog \
-        arjun \
-        corsy \
-        CORScanner \
-        bxss \
-        dalfox \
-        xsschecker \
-        xsscope \
-        ssrfmap \
-        gopherus \
-        jwt_tool \
-        s3scanner \
-        cloud-enum \
-        paramspider \
-        waymore \
-        uro \
-        anewer \
-        urldedupe \
-        gf \
-        dirsearch \
-        interactsh \
-        dnsgen \
-        nuclei \
-        httpx-toolkit \
-        subfinder \
-        puredns \
-        shuffledns
+        trufflehog arjun waymore uro dirsearch \
+    && rm -rf /root/.cache/pip
 
 RUN curl -sL https://go.dev/dl/go1.22.0.linux-amd64.tar.gz | tar -C /usr/local -xzf - 
 
@@ -100,7 +75,9 @@ RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
     go install -v github.com/dwisiswant0/unew@latest && \
     go install -v github.com/d3mondev/puredns/v2@latest && \
     go install -v github.com/nyxiereal/s3scanner@latest && \
-    go install -v github.com/coffinxp/loxs@latest
+    go install -v github.com/coffinxp/loxs@latest && \
+    go install -v github.com/devanshbatham/dalfox/v2@latest && \
+    go install -v github.com/gitleaks/gitleaks@latest
 
 RUN curl -sL https://raw.githubusercontent.com/tomnomnom/gf/master/gf-completion.bash > /etc/bash_completion.d/gf && \
     mkdir -p ~/.gf && \
@@ -121,28 +98,43 @@ RUN git clone --depth 1 https://github.com/danielmiessler/SecLists.git /usr/shar
 RUN git clone https://github.com/coffinxp/scripts.git /opt/scripts 2>/dev/null; \
     git clone https://github.com/EdOverflow/can-i-take-over-xyz.git /opt/can-i-take-over-xyz 2>/dev/null
 
-RUN pip3 install --no-cache-dir \
-        secretfinder \
-        linkfinder \
-        JSParser \
-        jsfscan \
-        jsubfinder \
-        xsscope \
-        xxeinjector \
-        sstimap \
-        gitdumper \
-        gitleaks \
-        gitgraber \
-        graphqlmap \
-        openredirex
-
-RUN mkdir /opt/venv && \
-    python3 -m venv /opt/venv && \
-    source /opt/venv/bin/activate && \
-    pip3 install --no-cache-dir \
-        secretfinder linkfinder jsparser jsfscan \
-        jsubfinder trufflehog xxeinjector sstimap \
-        gitdumper gitleaks gitgraber graphqlmap openredirex
+RUN \
+    git clone https://github.com/s0md3v/Corsy.git /opt/Corsy 2>/dev/null && \
+        cd /opt/Corsy && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/chenjj/CORScanner.git /opt/CORScanner 2>/dev/null && \
+        cd /opt/CORScanner && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/anspwn/bxss.git /opt/bxss 2>/dev/null && \
+        cd /opt/bxss && pip3 install . 2>/dev/null; \
+    git clone https://github.com/coffinxp/xsscope.git /opt/xsscope 2>/dev/null && \
+        cd /opt/xsscope && pip3 install . 2>/dev/null; \
+    git clone https://github.com/swisskyrepo/SSRFmap.git /opt/SSRFmap 2>/dev/null && \
+        cd /opt/SSRFmap && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/tarunkant/Gopherus.git /opt/gopherus 2>/dev/null && \
+        cd /opt/gopherus && pip3 install . 2>/dev/null; \
+    git clone https://github.com/ticarpi/jwt_tool.git /opt/jwt_tool 2>/dev/null && \
+        cd /opt/jwt_tool && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/coffinxp/cloud-enum.git /opt/cloud-enum 2>/dev/null && \
+        cd /opt/cloud-enum && pip3 install . 2>/dev/null; \
+    git clone https://github.com/devanshbatham/ParamSpider.git /opt/ParamSpider 2>/dev/null && \
+        cd /opt/ParamSpider && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/coffinxp/anewer.git /opt/anewer 2>/dev/null && \
+        cd /opt/anewer && pip3 install . 2>/dev/null; \
+    git clone https://github.com/ProjectAnte/dnsgen.git /opt/dnsgen 2>/dev/null && \
+        cd /opt/dnsgen && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/s0md3v/XSStrike.git /opt/XSStrike 2>/dev/null && \
+        cd /opt/XSStrike && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/enjoiz/XXEinjector.git /opt/XXEinjector 2>/dev/null; \
+    git clone https://github.com/swisskyrepo/SSTImap.git /opt/SSTImap 2>/dev/null && \
+        cd /opt/SSTImap && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/internetwache/GitTools.git /opt/GitTools 2>/dev/null; \
+    git clone https://github.com/coffinxp/GitGraber.git /opt/GitGraber 2>/dev/null && \
+        cd /opt/GitGraber && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/swisskyrepo/GraphQLmap.git /opt/GraphQLmap 2>/dev/null && \
+        cd /opt/GraphQLmap && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/coffinxp/openredirex.git /opt/openredirex 2>/dev/null && \
+        cd /opt/openredirex && pip3 install . 2>/dev/null; \
+    git clone https://github.com/ameenmaali/urldedupe.git /opt/urldedupe 2>/dev/null; \
+    echo "GitHub tools installation complete"
 
 RUN git clone https://github.com/m4ll0k/SecretFinder.git /opt/SecretFinder && \
     cd /opt/SecretFinder && pip3 install -r requirements.txt 2>/dev/null; \
