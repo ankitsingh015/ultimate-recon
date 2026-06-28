@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL --retry 5 --connect-timeout 30 \
-    https://golang.org/dl/go1.23.0.linux-amd64.tar.gz | tar -C /usr/local -xzf -
+    https://golang.org/dl/go1.24.0.linux-amd64.tar.gz | tar -C /usr/local -xzf -
 
 RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest ; \
     go install -v github.com/tomnomnom/assetfinder@latest ; \
@@ -158,13 +158,13 @@ RUN \
         cd /opt/loxs && pip3 install -r requirements.txt 2>/dev/null; \
     echo "GitHub tools installation complete"
 
-RUN git clone https://github.com/m4ll0k/SecretFinder.git /opt/SecretFinder && \
+RUN git clone https://github.com/m4ll0k/SecretFinder.git /opt/SecretFinder 2>/dev/null && \
     cd /opt/SecretFinder && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/GerbenJavado/LinkFinder.git /opt/LinkFinder && \
+    git clone https://github.com/GerbenJavado/LinkFinder.git /opt/LinkFinder 2>/dev/null && \
     cd /opt/LinkFinder && pip3 install -r requirements.txt 2>/dev/null; \
-    git clone https://github.com/0x240x23elu/JSParser.git /opt/JSParser && \
+    git clone https://github.com/0x240x23elu/JSParser.git /opt/JSParser 2>/dev/null && \
     cd /opt/JSParser && python3 setup.py install 2>/dev/null; \
-    git clone https://github.com/m4ll0k/JSFScan.git /opt/JSFScan && \
+    git clone https://github.com/m4ll0k/JSFScan.git /opt/JSFScan 2>/dev/null && \
     cd /opt/JSFScan && pip3 install -r requirements.txt 2>/dev/null
 
 RUN git clone https://github.com/dwisiswant0/jsubfinder.git /opt/jsubfinder && \
