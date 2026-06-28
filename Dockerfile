@@ -94,7 +94,6 @@ RUN pip3 install --upgrade pip setuptools wheel --ignore-installed && \
         jinja2 pyyaml aiohttp aiofiles \
         tqdm colorama rich \
         trufflehog arjun waymore uro dirsearch \
-        cloud-enum \
     && rm -rf /root/.cache/pip
 
 # GF patterns
@@ -145,6 +144,8 @@ RUN \
     git clone https://github.com/internetwache/GitTools.git /opt/GitTools 2>/dev/null; \
     git clone https://github.com/swisskyrepo/GraphQLmap.git /opt/GraphQLmap 2>/dev/null && \
         cd /opt/GraphQLmap && pip3 install -r requirements.txt 2>/dev/null; \
+    git clone https://github.com/initstring/cloud_enum.git /opt/cloud_enum 2>/dev/null && \
+        cd /opt/cloud_enum && pip3 install . 2>/dev/null; \
     git clone https://github.com/ameenmaali/urldedupe.git /opt/urldedupe 2>/dev/null; \
     git clone https://github.com/coffinxp/loxs.git /opt/loxs 2>/dev/null && \
         cd /opt/loxs && pip3 install -r requirements.txt 2>/dev/null; \
