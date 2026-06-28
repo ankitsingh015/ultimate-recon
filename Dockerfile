@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/root/go
 ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/root/.local/bin:/root/.cargo/bin:/opt/venv/bin
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
 ENV NUCLEI_HOME=/root/nuclei-templates
 
 SHELL ["/bin/bash", "-c"]
