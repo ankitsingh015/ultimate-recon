@@ -10,45 +10,43 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl wget git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sL https://go.dev/dl/go1.22.0.linux-amd64.tar.gz | tar -C /usr/local -xzf -
+RUN curl -fsSL --retry 5 --connect-timeout 30 \
+    https://golang.org/dl/go1.23.0.linux-amd64.tar.gz | tar -C /usr/local -xzf -
 
-RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
-    go install -v github.com/tomnomnom/assetfinder@latest && \
-    go install -v github.com/findomain/findomain@latest && \
-    go install -v github.com/owasp-amass/amass/v4/...@master && \
-    go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest && \
-    go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
-    go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest && \
-    go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest && \
-    go install -v github.com/projectdiscovery/chaos-client/cmd/chaos@latest && \
-    go install -v github.com/projectdiscovery/alterx/cmd/alterx@latest && \
-    go install -v github.com/projectdiscovery/asnmap/cmd/asnmap@latest && \
-    go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest && \
-    go install -v github.com/tomnomnom/qsreplace@latest && \
-    go install -v github.com/tomnomnom/gf@latest && \
-    go install -v github.com/tomnomnom/unfurl@latest && \
-    go install -v github.com/tomnomnom/anew@latest && \
-    go install -v github.com/hakluke/hakrawler@latest && \
-    go install -v github.com/tomnomnom/meg@latest && \
-    go install -v github.com/lc/gau/v2/cmd/gau@latest && \
-    go install -v github.com/lc/subjs@latest && \
-    go install -v github.com/hakluke/hakrawler@latest && \
-    go install -v github.com/hakluke/haktrails@latest && \
-    go install -v github.com/sensepost/gowitness@latest && \
-    go install -v github.com/michenriksen/aquatone@latest && \
-    go install -v github.com/gwen001/github-subdomains@latest && \
-    go install -v github.com/incogbyte/shosubgo@latest && \
-    go install -v github.com/003random/getJS@latest && \
-    go install -v github.com/pentestpad/subzy@latest && \
-    go install -v github.com/KathanP19/urlfinder@latest && \
-    go install -v github.com/Josue87/gospider@latest && \
-    go install -v github.com/s0md3v/rustscan@latest && \
-    go install -v github.com/dwisiswant0/unew@latest && \
-    go install -v github.com/d3mondev/puredns/v2@latest && \
-    go install -v github.com/nyxiereal/s3scanner@latest && \
-    go install -v github.com/coffinxp/loxs@latest && \
-    go install -v github.com/devanshbatham/dalfox/v2@latest && \
-    go install -v github.com/gitleaks/gitleaks@latest
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest ; \
+    go install -v github.com/tomnomnom/assetfinder@latest ; \
+    go install -v github.com/owasp-amass/amass/v4/...@latest ; \
+    go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest ; \
+    go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest ; \
+    go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest ; \
+    go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest ; \
+    go install -v github.com/projectdiscovery/chaos-client/cmd/chaos@latest ; \
+    go install -v github.com/projectdiscovery/alterx/cmd/alterx@latest ; \
+    go install -v github.com/projectdiscovery/asnmap/cmd/asnmap@latest ; \
+    go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest ; \
+    go install -v github.com/tomnomnom/qsreplace@latest ; \
+    go install -v github.com/tomnomnom/gf@latest ; \
+    go install -v github.com/tomnomnom/unfurl@latest ; \
+    go install -v github.com/tomnomnom/anew@latest ; \
+    go install -v github.com/hakluke/hakrawler@latest ; \
+    go install -v github.com/tomnomnom/meg@latest ; \
+    go install -v github.com/lc/gau/v2/cmd/gau@latest ; \
+    go install -v github.com/lc/subjs@latest ; \
+    go install -v github.com/hakluke/haktrails@latest ; \
+    go install -v github.com/sensepost/gowitness@latest ; \
+    go install -v github.com/michenriksen/aquatone@latest ; \
+    go install -v github.com/gwen001/github-subdomains@latest ; \
+    go install -v github.com/incogbyte/shosubgo@latest ; \
+    go install -v github.com/003random/getJS@latest ; \
+    go install -v github.com/pentestpad/subzy@latest ; \
+    go install -v github.com/KathanP19/urlfinder@latest ; \
+    go install -v github.com/Josue87/gospider@latest ; \
+    go install -v github.com/dwisiswant0/unew@latest ; \
+    go install -v github.com/d3mondev/puredns/v2@latest ; \
+    go install -v github.com/nyxiereal/s3scanner@latest ; \
+    go install -v github.com/devanshbatham/dalfox/v2@latest ; \
+    go install -v github.com/zricethezav/gitleaks/v8@latest ; \
+    echo "Go tools installation complete"
 
 # Stage 2: Final — minimal runtime image
 FROM kalilinux/kali-rolling:latest
@@ -76,9 +74,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip xz-utils \
     sqlmap wafw00f \
     dnsrecon dnsenum \
-    whatweb commix ffuf wpscan \
+    whatweb commix ffuf wpscan findomain \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/archives/*
+
+# RustScan binary (Rust tool, not available via go install)
+RUN curl -sL "https://github.com/RustScan/RustScan/releases/download/2.4.1/rustscan.deb" -o /tmp/rustscan.deb && \
+    dpkg -i /tmp/rustscan.deb 2>/dev/null; \
+    rm -f /tmp/rustscan.deb
 
 # Copy Go binaries from builder (no Go compiler in final image)
 COPY --from=builder /root/go/bin /root/go/bin
@@ -151,6 +154,8 @@ RUN \
     git clone https://github.com/coffinxp/openredirex.git /opt/openredirex 2>/dev/null && \
         cd /opt/openredirex && pip3 install . 2>/dev/null; \
     git clone https://github.com/ameenmaali/urldedupe.git /opt/urldedupe 2>/dev/null; \
+    git clone https://github.com/coffinxp/loxs.git /opt/loxs 2>/dev/null && \
+        cd /opt/loxs && pip3 install -r requirements.txt 2>/dev/null; \
     echo "GitHub tools installation complete"
 
 RUN git clone https://github.com/m4ll0k/SecretFinder.git /opt/SecretFinder && \
