@@ -28,7 +28,7 @@ class Phase3:
         live_file = raw / "live-list.txt"
 
         if not urls_file.exists() or not urls_file.stat().st_size:
-            print("  [!] No URLs file found. Using target directly.")
+            print("  [!] No URLs file found. Using target directly.", flush=True)
             with open(urls_file, "w") as f:
                 f.write(f"https://{target}\n")
         if not live_file.exists() or not live_file.stat().st_size:
@@ -39,7 +39,7 @@ class Phase3:
             "sqli", "xss", "lfi", "ssrf", "redirect", "rce", "idor", "debug_logic", "takeovers", "secrets"
         ])
 
-        print("  [*] Extracting parameters with gf patterns (parallel)...")
+        print("  [*] Extracting parameters with gf patterns (parallel)...", flush=True)
         param_results = {}
         gf_futures = {}
 
@@ -62,16 +62,16 @@ class Phase3:
                         with open(fp) as fh:
                             lines = [l.strip() for l in fh if l.strip()]
                             results["params"][p] = lines
-                            print(f"    -> {p}: {len(lines)} URLs")
+                            print(f"    -> {p}: {len(lines)} URLs", flush=True)
                 except Exception as e:
-                    print(f"    -> {p}: failed - {e}")
+                    print(f"    -> {p}: failed - {e}", flush=True)
 
         all_params = set()
         for plist in results["params"].values():
             all_params.update(plist)
         db.save_raw("params", "\n".join(sorted(all_params)), "all-params.txt")
 
-        print("  [*] Hidden parameter discovery with Arjun...")
+        print("  [*] Hidden parameter discovery with Arjun...", flush=True)
         arjun_out = raw / "hidden-params.txt"
         sample_urls = list(all_params)[:20] if all_params else [f"https://{target}"]
         for url in sample_urls[:5]:
@@ -84,7 +84,7 @@ class Phase3:
                 results["hidden_params"] = [l.strip() for l in f if l.strip()]
             db.save_raw("hidden_params", "\n".join(results["hidden_params"]), "hidden-params.txt")
 
-        print("  [*] JS file discovery and analysis...")
+        print("  [*] JS file discovery and analysis...", flush=True)
         js_out = raw / "js-files.txt"
         js_futures = {}
 
@@ -102,9 +102,9 @@ class Phase3:
                 name = js_futures[f]
                 try:
                     f.result()
-                    print(f"    -> {name} completed")
+                    print(f"    -> {name} completed", flush=True)
                 except Exception as e:
-                    print(f"    -> {name}: {e}")
+                    print(f"    -> {name}: {e}", flush=True)
 
         all_js = set()
         for js_src in ["katana-js.txt", "subjs.txt", "getjs.txt"]:
@@ -118,14 +118,14 @@ class Phase3:
 
         all_js = sorted(all_js)
         db.save_raw("js_files", "\n".join(all_js), "all-js-files.txt")
-        print(f"    -> {len(all_js)} JS files found")
+        print(f"    -> {len(all_js)} JS files found", flush=True)
 
         if all_js:
             js_out_file = raw / "js-analysis.txt"
             with open(raw / "js-urls.txt", "w") as f:
                 f.write("\n".join(all_js))
 
-            print("  [*] Extracting endpoints from JS files...")
+            print("  [*] Extracting endpoints from JS files...", flush=True)
             endpoints_result = orch.run_command(
                 f"cat {raw}/js-urls.txt | head -50 | xargs -I@ -P10 bash -c 'python3 /opt/LinkFinder/linkfinder.py -i @ -o cli 2>/dev/null' 2>/dev/null | grep -oP 'https?://[^\"\\'<> ]+' | sort -u | tee {raw}/js-endpoints.txt",
                 600
@@ -134,9 +134,9 @@ class Phase3:
                 with open(raw / "js-endpoints.txt") as f:
                     results["js_endpoints"] = [l.strip() for l in f if l.strip()]
                 db.save_raw("js_endpoints", "\n".join(results["js_endpoints"]), "js-endpoints.txt")
-                print(f"    -> {len(results['js_endpoints'])} endpoints from JS")
+                print(f"    -> {len(results['js_endpoints'])} endpoints from JS", flush=True)
 
-            print("  [*] Extracting secrets from JS files...")
+            print("  [*] Extracting secrets from JS files...", flush=True)
             secrets_result = orch.run_command(
                 f"cat {raw}/js-urls.txt | head -50 | xargs -I@ -P5 python3 /opt/SecretFinder/SecretFinder.py -i @ -o cli 2>/dev/null | grep -iE '(api.?key|secret|token|password|aws|bucket|slack|firebase|jwt|heroku)' | sort -u | tee {raw}/js-secrets.txt",
                 600
@@ -145,15 +145,15 @@ class Phase3:
                 with open(raw / "js-secrets.txt") as f:
                     results["js_secrets"] = [l.strip() for l in f if l.strip() and l.strip()[:1].isalpha()]
                 db.save_raw("js_secrets", "\n".join(results["js_secrets"]), "js-secrets.txt")
-                print(f"    -> {len(results['js_secrets'])} potential secrets")
+                print(f"    -> {len(results['js_secrets'])} potential secrets", flush=True)
 
-            print("  [*] Running nuclei on JS files...")
+            print("  [*] Running nuclei on JS files...", flush=True)
             nuclei_js = orch.run_command(
                 f"cat {raw}/js-urls.txt | nuclei -silent -t ~/nuclei-templates/http/exposures/ -c 30 2>/dev/null | tee {raw}/nuclei-js.txt",
                 600
             )
 
-        print("  [*] Port scanning live hosts...")
+        print("  [*] Port scanning live hosts...", flush=True)
         if not stealth:
             ports_out = raw / "open-ports.txt"
             port_result = orch.run_command(
@@ -169,9 +169,9 @@ class Phase3:
                             if len(parts) == 2:
                                 results["ports"].append({"ip": parts[0], "port": int(parts[1])})
                 db.save_raw("ports", "\n".join([f"{p['ip']}:{p['port']}" for p in results["ports"]]), "open-ports.txt")
-                print(f"    -> {len(results['ports'])} open ports found")
+                print(f"    -> {len(results['ports'])} open ports found", flush=True)
 
-        print("  [*] Directory brute-forcing (top hosts)...")
+        print("  [*] Directory brute-forcing (top hosts)...", flush=True)
         if not stealth:
             dirs_out = raw / "dirs-found.txt"
             dir_result = orch.run_command(
@@ -184,7 +184,7 @@ class Phase3:
                 with open(raw / "dirsearch-report.txt") as f:
                     results["dirs_found"] = [l.strip() for l in f if l.strip()]
 
-        print("  [*] Sensitive file discovery...")
+        print("  [*] Sensitive file discovery...", flush=True)
         sens_result = orch.run_command(
             f"cat {urls_file} 2>/dev/null | grep -E '\\.(xls|xml|xlsx|json|pdf|sql|doc|docx|pptx|txt|zip|tar\\.gz|tgz|bak|7z|rar|log|cache|secret|db|backup|yml|gz|config|csv|yaml|md|md5|env|git|svn|p12|pem|key|crt|csr|sh|py|java|class|war|ear|sqlitedb|sqlite3|accdb|mdb|gitignore|ini|conf|properties|plist|cfg)$' "
             f"| sort -u | tee {raw}/sensitive-files.txt",
@@ -195,14 +195,14 @@ class Phase3:
             with open(raw / "sensitive-files.txt") as f:
                 sens_files = [l.strip() for l in f if l.strip()]
             db.save_raw("sensitive_files", "\n".join(sens_files), "sensitive-files.txt")
-            print(f"    -> {len(sens_files)} potentially sensitive files")
+            print(f"    -> {len(sens_files)} potentially sensitive files", flush=True)
 
-        print("  [*] Cloud asset enumeration...")
+        print("  [*] Cloud asset enumeration...", flush=True)
         cloud_result = orch.run_command(
             f"cloud_enum -k {target} 2>/dev/null | tee {raw}/cloud-assets.txt", 300
         )
 
-        print("  [*] Exposed .git detection...")
+        print("  [*] Exposed .git detection...", flush=True)
         git_result = orch.run_command(
             f"cat {live_file} | head -10 | httpx -silent -path /.git/config -mc 200 -ms '[core]' 2>/dev/null | tee {raw}/git-leaks.txt",
             300
@@ -218,7 +218,7 @@ class Phase3:
         }
 
         nuclei_file = raw / "nuclei-exposures.txt"
-        print("  [*] Running nuclei exposures scanning...")
+        print("  [*] Running nuclei exposures scanning...", flush=True)
         nuclei_result = orch.run_command(
             f"cat {live_file} | nuclei -silent -t ~/nuclei-templates/http/exposures/ -c {orch.args.threads} "
             f"-bs 50 -o {nuclei_file} 2>/dev/null",
@@ -226,3 +226,4 @@ class Phase3:
         )
 
         return results
+

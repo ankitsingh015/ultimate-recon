@@ -48,9 +48,9 @@ class Orchestrator:
             return
 
         if not self.args.target and not self.args.tool:
-            print("\n  [!] Target domain required\n")
-            print("  Usage: ultimate-recon example.com\n")
-            print("  Use --list-tools to see single tools\n")
+            print("\n  [!] Target domain required\n", flush=True)
+            print("  Usage: ultimate-recon example.com\n", flush=True)
+            print("  Use --list-tools to see single tools\n", flush=True)
             sys.exit(1)
 
         self.target = self.args.target
@@ -210,7 +210,7 @@ Examples:
     def _setup_signal_handlers(self):
         def handler(signum, frame):
             if not self.shutdown_flag:
-                print("\n\n[!] Interrupted. Saving checkpoint...")
+                print("\n\n[!] Interrupted. Saving checkpoint...", flush=True)
                 self.shutdown_flag = True
                 self.db.save_checkpoint("shutdown", "interrupted", {
                     "elapsed": time.time() - self.start_time
@@ -223,10 +223,10 @@ Examples:
     def _list_workspaces(self):
         ws_dir = Path("workspaces")
         if not ws_dir.exists() or not any(ws_dir.iterdir()):
-            print("\n  No workspaces found. Run `ultimate-recon example.com` to create one.\n")
+            print("\n  No workspaces found. Run `ultimate-recon example.com` to create one.\n", flush=True)
             return
-        print("\n  Workspaces:")
-        print("  " + "-" * 60)
+        print("\n  Workspaces:", flush=True)
+        print("  " + "-" * 60, flush=True)
         for d in sorted(ws_dir.iterdir()):
             if d.is_dir():
                 meta_file = d / "target.yaml"
@@ -239,34 +239,34 @@ Examples:
                 msgs = 0
                 if chat_file.exists():
                     msgs = sum(1 for _ in open(chat_file) if _.strip())
-                print(f"    {d.name:<30} phases: {phases:<15} chats: {msgs}")
+                print(f"    {d.name:<30} phases: {phases:<15} chats: {msgs}", flush=True)
         print()
 
     def _list_tools(self):
-        print("\n  Available Single Tools:")
-        print("  " + "-" * 60)
+        print("\n  Available Single Tools:", flush=True)
+        print("  " + "-" * 60, flush=True)
         if self.args.category:
             tools = ToolRegistry.list_by_category(self.args.category)
-            print(f"  Category: {self.args.category} ({len(tools)} tools)\n")
+            print(f"  Category: {self.args.category} ({len(tools)} tools)\n", flush=True)
             for t in sorted(tools, key=lambda x: x["name"]):
                 api = f" [needs: {t['needs_api']}]" if t.get("needs_api") else ""
-                print(f"    {t['name']:<25} {t['description']}{api}")
+                print(f"    {t['name']:<25} {t['description']}{api}", flush=True)
         else:
             categories = ToolRegistry.categories()
             for cat, tools in sorted(categories.items()):
-                print(f"  [{cat.upper()}] ({len(tools)} tools)")
+                print(f"  [{cat.upper()}] ({len(tools)} tools)", flush=True)
                 for t in sorted(tools, key=lambda x: x["name"])[:5]:
                     api = f" [needs: {t['needs_api']}]" if t.get("needs_api") else ""
-                    print(f"    {t['name']:<25} {t['description']}{api}")
+                    print(f"    {t['name']:<25} {t['description']}{api}", flush=True)
                 if len(tools) > 5:
-                    print(f"    ... and {len(tools)-5} more")
+                    print(f"    ... and {len(tools)-5} more", flush=True)
                 print()
-        print("  Usage: ultimate-recon example.com --tool <name>\n")
+        print("  Usage: ultimate-recon example.com --tool <name>\n", flush=True)
 
     def _setup_keys_wizard(self):
-        print("\n  API Key Setup")
-        print("  " + "-" * 40)
-        print("  API keys are optional. The tool works without them.")
+        print("\n  API Key Setup", flush=True)
+        print("  " + "-" * 40, flush=True)
+        print("  API keys are optional. The tool works without them.", flush=True)
         print()
         env_path = Path(".env")
         if not env_path.exists():
@@ -274,19 +274,19 @@ Examples:
             if example.exists():
                 import shutil
                 shutil.copy(str(example), str(env_path))
-                print("  [✓] Created .env from .env.example")
+                print("  [✓] Created .env from .env.example", flush=True)
             else:
                 env_path.write_text("# Ultimate Recon API Keys\n")
-                print("  [✓] Created empty .env")
-        print(f"  Edit: nano {env_path.resolve()}")
+                print("  [✓] Created empty .env", flush=True)
+        print(f"  Edit: nano {env_path.resolve()}", flush=True)
         print()
 
     def _launch_web_ui(self):
-        print("\n  [*] Starting Web UI...")
+        print("\n  [*] Starting Web UI...", flush=True)
         web_dir = Path(__file__).parent.parent / "web-ui"
         app_file = web_dir / "app.py"
         if not app_file.exists():
-            print("  [!] web-ui/app.py not found")
+            print("  [!] web-ui/app.py not found", flush=True)
             sys.exit(1)
         os.chdir(str(web_dir.parent))
         os.execvp("python3", ["python3", str(app_file)])
@@ -294,7 +294,7 @@ Examples:
     def run_command(self, cmd: str, timeout: int = 600, env: dict = None) -> subprocess.CompletedProcess:
         if self.args.verbose and not cmd.startswith("sleep"):
             safe_cmd = self._scrub_sensitive(cmd[:200])
-            print(f"    $ {safe_cmd}...")
+            print(f"    $ {safe_cmd}...", flush=True)
         try:
             result = subprocess.run(
                 cmd,
@@ -319,28 +319,28 @@ Examples:
             print()
 
     async def phase0_check(self) -> bool:
-        print("\n[PHASE 0] Environment Check")
-        print("-" * 50)
+        print("\n[PHASE 0] Environment Check", flush=True)
+        print("-" * 50, flush=True)
         dep_checker = DependencyChecker()
         if not dep_checker.check_python_version():
-            print("  [!] Python 3.8+ required")
+            print("  [!] Python 3.8+ required", flush=True)
             return False
         free_gb, ok = dep_checker.check_disk_space(str(self.output_dir))
         if not ok:
-            print(f"  [!] Low disk space: {free_gb:.1f}GB free")
+            print(f"  [!] Low disk space: {free_gb:.1f}GB free", flush=True)
         else:
-            print(f"  [✓] Disk space: {free_gb:.1f}GB free")
+            print(f"  [✓] Disk space: {free_gb:.1f}GB free", flush=True)
         has_net = dep_checker.check_network()
-        print(f"  [{'✓' if has_net else ' '}] Network: {'connected' if has_net else 'no connection'}")
+        print(f"  [{'✓' if has_net else ' '}] Network: {'connected' if has_net else 'no connection'}", flush=True)
         checker = ToolChecker("config")
         results = checker.check_all()
-        print(f"  Tools: {results['available_count']}/{results['total']}")
+        print(f"  Tools: {results['available_count']}/{results['total']}", flush=True)
         api_results = checker.check_api_keys()
         configured = api_results.get("configured_count", 0)
         total_api = api_results.get("total", 0)
-        print(f"  API keys: {configured}/{total_api} configured")
-        print(f"  AI provider: {self.args.ai}")
-        print(f"  Workspace: {self.output_dir}")
+        print(f"  API keys: {configured}/{total_api} configured", flush=True)
+        print(f"  AI provider: {self.args.ai}", flush=True)
+        print(f"  Workspace: {self.output_dir}", flush=True)
         print()
         self.db.log_session_event(str(self.output_dir), {
             "event": "phase0_complete",
@@ -351,8 +351,8 @@ Examples:
 
     def run_phase(self, phase_num: int, phase_module) -> dict:
         phase_name = f"phase{phase_num}"
-        print(f"\n[PHASE {phase_num}] {phase_module.NAME}")
-        print("-" * 60)
+        print(f"\n[PHASE {phase_num}] {phase_module.NAME}", flush=True)
+        print("-" * 60, flush=True)
 
         self.db.save_checkpoint(phase_name, "running")
         self.db.log_session_event(str(self.output_dir), {"event": "phase_start", "phase": phase_num})
@@ -364,7 +364,7 @@ Examples:
                 ai_config = yaml.safe_load(f) or {}
             phase_key = f"phase{phase_num}"
             if phase_key in ai_config:
-                print(f"  [*] Using AI-configured overrides for {phase_key}")
+                print(f"  [*] Using AI-configured overrides for {phase_key}", flush=True)
                 if hasattr(phase_module, "apply_overrides"):
                     phase_module.apply_overrides(ai_config[phase_key])
 
@@ -415,33 +415,33 @@ Examples:
         elapsed = time.time() - self.start_time
         recs = analysis.get("recommendations", [])
         if recs:
-            print(f"\n  Recommendations:")
+            print(f"\n  Recommendations:", flush=True)
             for r in recs[:5]:
-                print(f"    → {r}")
+                print(f"    → {r}", flush=True)
 
-        print(f"\n  ⏱️  Elapsed: {elapsed:.0f}s")
+        print(f"\n  ⏱️  Elapsed: {elapsed:.0f}s", flush=True)
         return phase_data
 
     def run_single_tool(self):
         tool_name = self.args.tool
         tool = ToolRegistry.get(tool_name)
         if not tool:
-            print(f"\n  [!] Unknown tool: '{tool_name}'")
-            print(f"  Use --list-tools to see all available tools\n")
+            print(f"\n  [!] Unknown tool: '{tool_name}'", flush=True)
+            print(f"  Use --list-tools to see all available tools\n", flush=True)
             sys.exit(1)
 
-        print(f"\n[TOOL] {tool_name}")
-        print("-" * 60)
-        print(f"  Category:    {tool['category']}")
-        print(f"  Description: {tool['description']}")
-        print(f"  Output:      {self.output_dir}")
+        print(f"\n[TOOL] {tool_name}", flush=True)
+        print("-" * 60, flush=True)
+        print(f"  Category:    {tool['category']}", flush=True)
+        print(f"  Description: {tool['description']}", flush=True)
+        print(f"  Output:      {self.output_dir}", flush=True)
         print()
 
         if tool.get("needs_api"):
             key = self.api_keys.get(tool["needs_api"], "")
             if not key:
-                print(f"  [!] This tool needs an API key for '{tool['needs_api']}'")
-                print(f"  Add it to .env or config/api-keys.yaml\n")
+                print(f"  [!] This tool needs an API key for '{tool['needs_api']}'", flush=True)
+                print(f"  Add it to .env or config/api-keys.yaml\n", flush=True)
                 sys.exit(1)
 
         output_filename = f"{tool_name}{tool['output_ext']}"
@@ -449,11 +449,11 @@ Examples:
 
         cmd = ToolRegistry.build_cmd(tool_name, self.target, output_path, self.api_keys)
         if not cmd:
-            print(f"  [!] Failed to build command\n")
+            print(f"  [!] Failed to build command\n", flush=True)
             sys.exit(1)
 
         safe_cmd = self._scrub_sensitive(cmd[:120])
-        print(f"  Running: {safe_cmd}...\n")
+        print(f"  Running: {safe_cmd}...\n", flush=True)
 
         result = self.run_command(cmd, timeout=tool.get("timeout", 300))
 
@@ -464,15 +464,15 @@ Examples:
                 with open(output_path, "a") as f:
                     f.write("\n# STDERR:\n" + result.stderr)
             lines = [l.strip() for l in result.stdout.split("\n") if l.strip()]
-            print(f"  [✓] Output: {len(lines)} lines -> {output_path}")
+            print(f"  [✓] Output: {len(lines)} lines -> {output_path}", flush=True)
         else:
             with open(output_path, "w") as f:
                 f.write(result.stderr if result.stderr else "No output")
-            print(f"  [!] Tool produced no output.")
+            print(f"  [!] Tool produced no output.", flush=True)
 
         self.db.save_raw(f"single_tool_{tool_name}", result.stdout or "", output_filename)
 
-        print(f"\n  [*] Running AI analysis on output...")
+        print(f"\n  [*] Running AI analysis on output...", flush=True)
         analysis = self._analyze_single_tool(tool_name, tool, result.stdout or "", output_path)
 
         analysis_path = self.output_dir / "analysis" / f"single-tool-{tool_name}-analysis.txt"
@@ -501,7 +501,7 @@ Examples:
             "success": result.returncode == 0
         })
 
-        print(f"  [✓] Analysis: {analysis_path}\n")
+        print(f"  [✓] Analysis: {analysis_path}\n", flush=True)
 
     def _analyze_single_tool(self, tool_name: str, tool: dict, output: str, output_path: Path) -> dict:
         lines = [l.strip() for l in output.split("\n") if l.strip()]
@@ -560,17 +560,17 @@ Examples:
 ║     Complete Bug Bounty Reconnaissance Toolkit     ║
 ╚════════════════════════════════════════════════════╝
         """
-        print(banner)
-        print(f"  Target:     {self.target}")
-        print(f"  Workspace:  {self.output_dir}")
-        print(f"  AI:         {self.args.ai}")
-        print(f"  Started:    {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(banner, flush=True)
+        print(f"  Target:     {self.target}", flush=True)
+        print(f"  Workspace:  {self.output_dir}", flush=True)
+        print(f"  AI:         {self.args.ai}", flush=True)
+        print(f"  Started:    {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
         print()
 
     async def run(self):
         if self.args.tool:
             if not self.target:
-                print("\n  [!] Target domain required when using --tool\n")
+                print("\n  [!] Target domain required when using --tool\n", flush=True)
                 sys.exit(1)
             self.print_banner()
             self.run_single_tool()
@@ -590,10 +590,10 @@ Examples:
             if cp and cp["phase"].startswith("phase"):
                 last_phase = int(cp["phase"].replace("phase", ""))
                 phases_to_run = [p for p in range(last_phase, 6)]
-                print(f"  [*] Resuming from phase {last_phase}")
+                print(f"  [*] Resuming from phase {last_phase}", flush=True)
 
         if self.args.stealth:
-            print("  [*] Stealth mode — skipping aggressive scans\n")
+            print("  [*] Stealth mode — skipping aggressive scans\n", flush=True)
 
         phase_modules = {
             1: Phase1(),
@@ -619,11 +619,11 @@ Examples:
         )
 
         if chains:
-            print(f"\n  Attack Chains Identified: {len(chains)}")
+            print(f"\n  Attack Chains Identified: {len(chains)}", flush=True)
             for c in chains:
-                print(f"    [{c.get('severity', '?').upper()}] {c['name']}")
+                print(f"    [{c.get('severity', '?').upper()}] {c['name']}", flush=True)
                 for step in c.get("steps", [])[:3]:
-                    print(f"      → {step}")
+                    print(f"      → {step}", flush=True)
 
         elapsed = time.time() - self.start_time
         self.db.log_session_event(str(self.output_dir), {
@@ -632,14 +632,14 @@ Examples:
             "phases_completed": phases_to_run
         })
 
-        print("\n" + "=" * 60)
-        print("  FINAL SUMMARY")
-        print("=" * 60)
-        print(f"  Target:     {self.target}")
-        print(f"  Time:       {elapsed:.0f}s ({elapsed/60:.1f}m)")
-        print(f"  Workspace:  {self.output_dir}")
-        print(f"  Report:     {self.output_dir}/report.html")
-        print(f"  Chat log:   {self.output_dir}/chat.jsonl")
+        print("\n" + "=" * 60, flush=True)
+        print("  FINAL SUMMARY", flush=True)
+        print("=" * 60, flush=True)
+        print(f"  Target:     {self.target}", flush=True)
+        print(f"  Time:       {elapsed:.0f}s ({elapsed/60:.1f}m)", flush=True)
+        print(f"  Workspace:  {self.output_dir}", flush=True)
+        print(f"  Report:     {self.output_dir}/report.html", flush=True)
+        print(f"  Chat log:   {self.output_dir}/chat.jsonl", flush=True)
         print()
 
         self.db.close()
@@ -652,3 +652,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

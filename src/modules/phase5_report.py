@@ -12,7 +12,7 @@ class Phase5:
         target = orch.target
         db = orch.db
 
-        print("  [*] Generating comprehensive HTML report...")
+        print("  [*] Generating comprehensive HTML report...", flush=True)
 
         report_path = out / "report.html"
         stats = db.get_stats(1) if hasattr(db, 'get_stats') else {}
@@ -107,8 +107,8 @@ class Phase5:
         with open(report_path, "w") as f:
             f.write(html)
 
-        print(f"    -> Report generated: {report_path}")
-        print(f"    -> Open in browser: file://{report_path.resolve()}")
+        print(f"    -> Report generated: {report_path}", flush=True)
+        print(f"    -> Open in browser: file://{report_path.resolve()}", flush=True)
 
         return {"report_path": str(report_path)}
 
@@ -352,3 +352,4 @@ document.getElementById(this.dataset.tab).style.display = 'block';
 </script>
 </body>
 </html>"""
+

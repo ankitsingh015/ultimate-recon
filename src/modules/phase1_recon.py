@@ -41,7 +41,7 @@ class Phase1:
         completed = [0]
         subdomain_file = raw / "all-subdomains.txt"
 
-        print(f"\n  Launching {total_tasks} parallel tasks...\n")
+        print(f"\n  Launching {total_tasks} parallel tasks...\n", flush=True)
 
         with ThreadPoolExecutor(max_workers=min(orch.args.threads, total_tasks)) as executor:
             futures = {}
@@ -123,7 +123,7 @@ class Phase1:
         results["subdomain_count"] = len(all_subs)
 
         if not stealth:
-            print("  [*] Running permutations + brute-force (parallel)...")
+            print("  [*] Running permutations + brute-force (parallel)...", flush=True)
             perms_out = raw / "permutations.txt"
             brute_out = raw / "bruteforce.txt"
             resolved_out = raw / "resolved_subdomains.txt"
@@ -144,17 +144,17 @@ class Phase1:
                             new_lines = [l.strip() for l in r.stdout.split("\n") if l.strip()]
                             all_subdomains.update(new_lines)
                             db.append_raw("subdomains", r.stdout, "all-subdomains.txt")
-                            print(f"    -> {name}: {len(new_lines)} new")
+                            print(f"    -> {name}: {len(new_lines)} new", flush=True)
                     except Exception:
-                        print(f"    -> {name}: failed")
+                        print(f"    -> {name}: failed", flush=True)
 
-            print("  [*] Resolving subdomains...")
+            print("  [*] Resolving subdomains...", flush=True)
             resolve_result = orch.run_command(
                 f"cat {raw}/all-subdomains.txt 2>/dev/null | sort -u | dnsx -silent -a -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u | tee {resolved_out}",
                 300
             )
 
-        print("  [*] Running ASN + IP discovery...")
+        print("  [*] Running ASN + IP discovery...", flush=True)
         asn_out = raw / "asn-ips.txt"
         asn_result = orch.run_command(
             f"asnmap -d {target} 2>/dev/null | dnsx -silent -resp-only -r wordlists/resolvers.txt 2>/dev/null | sort -u | tee {asn_out}",
@@ -192,7 +192,7 @@ class Phase1:
         results["ip_count"] = len(all_ips)
 
         if api_keys.get("shodan") and not stealth:
-            print("  [*] Running Shodan-powered URL discovery...")
+            print("  [*] Running Shodan-powered URL discovery...", flush=True)
             shodan_urls = orch.run_command(
                 f"shodan domain {target} 2>/dev/null | awk '{{print $3}}' | httpx-toolkit -silent 2>/dev/null | nuclei -silent -s critical,high,medium 2>/dev/null | tee {raw}/shodan-nuclei.txt",
                 600
@@ -208,3 +208,4 @@ class Phase1:
         }
 
         return results
+

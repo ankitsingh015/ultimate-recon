@@ -26,14 +26,14 @@ class Phase2:
         if not subdomain_file.exists():
             subdomain_file = raw / "all-subdomains.txt"
         if not subdomain_file.exists():
-            print("  [!] No subdomains found. Using target directly.")
+            print("  [!] No subdomains found. Using target directly.", flush=True)
             with open(subdomain_file, "w") as f:
                 f.write(target + "\n")
 
         config = orch.config.get("phases", {}).get("phase2", {})
         ports = config.get("httpx_ports", "80,443,8080,8000,8888,8443,3000,5000")
 
-        print("  [*] Probing live hosts with httpx...")
+        print("  [*] Probing live hosts with httpx...", flush=True)
         alive_file = raw / "alive-hosts.txt"
         httpx_result = orch.run_command(
             f"cat {subdomain_file} | httpx -silent -ports {ports} -threads {orch.args.threads} "
@@ -51,10 +51,10 @@ class Phase2:
                             live_hosts.append(parts[0])
             results["live_hosts"] = live_hosts
             db.save_raw("live_hosts", "\n".join(live_hosts), "alive-hosts.txt")
-            print(f"    -> {len(live_hosts)} live hosts found")
+            print(f"    -> {len(live_hosts)} live hosts found", flush=True)
 
         if not live_hosts:
-            print("  [!] No live hosts. Trying single target...")
+            print("  [!] No live hosts. Trying single target...", flush=True)
             httpx_single = orch.run_command(
                 f"echo {target} | httpx -silent -ports {ports} -status-code -title -tech-detect -o {alive_file} 2>/dev/null",
                 120
@@ -71,7 +71,7 @@ class Phase2:
         with open(live_list, "w") as f:
             f.write("\n".join(live_hosts))
 
-        print("  [*] Collecting URLs (passive + active in parallel)...")
+        print("  [*] Collecting URLs (passive + active in parallel)...", flush=True)
         urls_file = raw / "all-urls.txt"
         task_futures = {}
 
@@ -95,11 +95,11 @@ class Phase2:
                 name = task_futures[task_future]
                 try:
                     task_future.result()
-                    print(f"    -> {name} completed")
+                    print(f"    -> {name} completed", flush=True)
                 except Exception as e:
-                    print(f"    -> {name} failed: {e}")
+                    print(f"    -> {name} failed: {e}", flush=True)
 
-        print("  [*] Merging and deduplicating URLs...")
+        print("  [*] Merging and deduplicating URLs...", flush=True)
         all_urls = set()
         for url_file in ["gau_urls.txt", "waymore_urls.txt", "katana_urls.txt", "gospider_urls.txt", "hakrawler_urls.txt"]:
             fp = raw / url_file
@@ -122,9 +122,9 @@ class Phase2:
         all_urls = sorted(all_urls)
         db.save_raw("urls", "\n".join(all_urls), "all-urls.txt")
         results["urls"] = all_urls
-        print(f"    -> {len(all_urls)} unique URLs collected")
+        print(f"    -> {len(all_urls)} unique URLs collected", flush=True)
 
-        print("  [*] Tech fingerprinting...")
+        print("  [*] Tech fingerprinting...", flush=True)
         tech_out = raw / "tech-stack.txt"
         tech_result = orch.run_command(
             f"cat {live_list} | head -50 | whatweb -a 3 --log-verbose={tech_out} 2>/dev/null", 300
@@ -143,7 +143,7 @@ class Phase2:
         results["tech_stack"] = tech_stack
         db.save_raw("tech_stack", json.dumps(tech_stack, indent=2), "tech-stack.json")
 
-        print("  [*] WAF detection...")
+        print("  [*] WAF detection...", flush=True)
         waf_result = orch.run_command(
             f"cat {live_list} | head -20 | wafw00f -i - 2>/dev/null | tee {raw}/waf-output.txt", 300
         )
@@ -157,7 +157,7 @@ class Phase2:
         results["waf"] = waf_results
 
         if not stealth:
-            print("  [*] Taking screenshots (up to 100 hosts)...")
+            print("  [*] Taking screenshots (up to 100 hosts)...", flush=True)
             screenshot_dir = out / "screenshots"
             screenshot_dir.mkdir(exist_ok=True)
             gowitness_result = orch.run_command(
@@ -166,7 +166,7 @@ class Phase2:
             )
             screenshots = list(screenshot_dir.glob("*.png"))
             results["screenshots"] = [str(s.relative_to(out)) for s in screenshots[:20]]
-            print(f"    -> {len(screenshots)} screenshots taken")
+            print(f"    -> {len(screenshots)} screenshots taken", flush=True)
 
         results["summary"] = {
             "live_hosts": len(live_hosts),
@@ -176,3 +176,4 @@ class Phase2:
         }
 
         return results
+

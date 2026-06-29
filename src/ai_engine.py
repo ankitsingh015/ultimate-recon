@@ -53,51 +53,51 @@ class OpenCodeProvider(AIProvider):
             f.write(formatted_prompt)
 
         print()
-        print("  " + "=" * 58)
-        print("  🧠 AI ANALYSIS — PHASE " + str(phase_num))
-        print("  " + "=" * 58)
+        print("  " + "=" * 58, flush=True)
+        print("  🧠 AI ANALYSIS — PHASE " + str(phase_num), flush=True)
+        print("  " + "=" * 58, flush=True)
         print()
-        print("  I've analyzed the results. Here's what I found:")
+        print("  I've analyzed the results. Here's what I found:", flush=True)
         print()
 
         return self._wait_for_analysis(phase_num, phase_data, decision_log_dir)
 
     def _wait_for_analysis(self, phase_num: int, phase_data: dict, log_dir: Path) -> dict:
-        print("  [AI is thinking...]")
+        print("  [AI is thinking...]", flush=True)
         time.sleep(1)
 
         analysis = self._rule_based_fallback(phase_data)
 
-        print("  " + "-" * 58)
+        print("  " + "-" * 58, flush=True)
         interesting = analysis.get("interesting_hosts", {})
         if interesting:
             for cat, hosts in interesting.items():
-                print(f"    [{cat.upper()}] {len(hosts)} found")
+                print(f"    [{cat.upper()}] {len(hosts)} found", flush=True)
                 for h in hosts[:3]:
-                    print(f"      - {h}")
+                    print(f"      - {h}", flush=True)
                 if len(hosts) > 3:
-                    print(f"      ... and {len(hosts)-3} more")
+                    print(f"      ... and {len(hosts)-3} more", flush=True)
 
         recs = analysis.get("recommendations", [])
         if recs:
             print()
-            print("  Recommendations:")
+            print("  Recommendations:", flush=True)
             for r in recs[:5]:
-                print(f"    → {r}")
+                print(f"    → {r}", flush=True)
 
         user_input = ""
         if sys.stdin.isatty():
             print()
-            print("  " + "-" * 58)
-            print("  What should I focus on next?")
-            print("  (type your response or press Enter to continue with defaults)")
+            print("  " + "-" * 58, flush=True)
+            print("  What should I focus on next?", flush=True)
+            print("  (type your response or press Enter to continue with defaults)", flush=True)
             try:
                 user_input = input("  > ").strip()
             except (EOFError, KeyboardInterrupt):
                 user_input = ""
 
         if user_input:
-            print(f"\n  [✓] Noted: {user_input}")
+            print(f"\n  [✓] Noted: {user_input}", flush=True)
             analysis["user_direction"] = user_input
 
             chat_log = log_dir.parent / "chat.jsonl"
@@ -266,3 +266,4 @@ class AIEngine:
 
         result = self.provider.analyze(5, phase_data, prompt, workspace)
         return result.get("chains", [])
+

@@ -35,7 +35,7 @@ class Phase4:
         param_ssrf = raw / "params-ssrf.txt"
         param_redirect = raw / "params-redirect.txt"
 
-        print("  [*] Phase 4: Parallel vulnerability scanning launched")
+        print("  [*] Phase 4: Parallel vulnerability scanning launched", flush=True)
         print()
 
         vuln_futures = {}
@@ -80,10 +80,10 @@ class Phase4:
             if result and "vulns" in result:
                 results["vulnerabilities"].extend(result["vulns"])
                 if result.get("output_file"):
-                    print(f"    -> {name}: {len(result['vulns'])} findings -> {result['output_file']}")
+                    print(f"    -> {name}: {len(result['vulns'])} findings -> {result['output_file']}", flush=True)
 
         if not results["vulnerabilities"]:
-            print("  [*] No vulnerabilities found via targeted params. Running broad nuclei on all hosts...")
+            print("  [*] No vulnerabilities found via targeted params. Running broad nuclei on all hosts...", flush=True)
             broad_nuclei = orch.run_command(
                 f"cat {live_file} | nuclei -silent -c {orch.args.threads} -bs 50 "
                 f"-s critical,high,medium -o {vulns_dir / 'nuclei-broad.txt'} 2>/dev/null",
@@ -353,3 +353,4 @@ class Phase4:
                             "verified": False
                         })
         return {"vulns": vulns, "output_file": str(outfile)}
+
