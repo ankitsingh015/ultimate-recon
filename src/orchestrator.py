@@ -73,7 +73,7 @@ class Orchestrator:
         self.config = self._load_config()
         self.api_keys = self._load_env_and_api_keys()
         self.db = ReconDatabase(str(self.output_dir))
-        self.ai_engine = AIEngine(Path("config"), self.output_dir)
+        self.ai_engine = AIEngine(Path("config"), self.output_dir, provider_name=self.args.ai)
         self.analyzer = ReconAnalyzer(str(self.output_dir), self.target, ai_engine=self.ai_engine)
         self.start_time = time.time()
         self.shutdown_flag = False

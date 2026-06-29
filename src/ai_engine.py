@@ -15,6 +15,14 @@ class AIProvider:
         return "base"
 
 
+class DisabledProvider(AIProvider):
+    def name(self) -> str:
+        return "disabled"
+
+    def analyze(self, phase_num: int, phase_data: dict, prompt: str, workspace: Path) -> dict:
+        return {}
+
+
 class OpenCodeProvider(AIProvider):
     def name(self) -> str:
         return "opencode"
@@ -77,16 +85,16 @@ class OpenCodeProvider(AIProvider):
             for r in recs[:5]:
                 print(f"    → {r}")
 
-        print()
-        print("  " + "-" * 58)
-        print("  What should I focus on next?")
-        print("  (type your response or press Enter to continue with defaults)")
-
         user_input = ""
-        try:
-            user_input = input("  > ").strip()
-        except (EOFError, KeyboardInterrupt):
-            user_input = ""
+        if sys.stdin.isatty():
+            print()
+            print("  " + "-" * 58)
+            print("  What should I focus on next?")
+            print("  (type your response or press Enter to continue with defaults)")
+            try:
+                user_input = input("  > ").strip()
+            except (EOFError, KeyboardInterrupt):
+                user_input = ""
 
         if user_input:
             print(f"\n  [✓] Noted: {user_input}")
@@ -193,13 +201,21 @@ class OpenCodeProvider(AIProvider):
 
 
 class AIEngine:
-    def __init__(self, config_dir: Path, workspace: Path):
+    def __init__(self, config_dir: Path, workspace: Path, provider_name: str = ""):
         self.config_dir = config_dir
         self.workspace = workspace
         self.provider = None
-        self._load_provider()
+        self._load_provider(provider_name)
 
-    def _load_provider(self):
+    def _load_provider(self, provider_name: str = ""):
+        if provider_name == "disabled":
+            self.provider = DisabledProvider()
+            return
+
+        if provider_name:
+            self.provider = self._create_provider(provider_name)
+            return
+
         provider_config_path = self.config_dir / "ai-providers.yaml"
         if provider_config_path.exists():
             import yaml
@@ -216,6 +232,7 @@ class AIEngine:
 
     def _create_provider(self, name: str) -> AIProvider:
         providers = {
+            "disabled": DisabledProvider,
             "opencode": OpenCodeProvider,
         }
         cls = providers.get(name, OpenCodeProvider)

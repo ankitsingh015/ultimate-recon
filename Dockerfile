@@ -172,6 +172,7 @@ RUN mkdir -p /opt/custom-wordlists && \
 
 COPY src/ /opt/ultimate-recon/src/
 COPY config/ /opt/ultimate-recon/config/
+COPY web-ui/ /opt/ultimate-recon/web-ui/
 COPY run.sh setup.sh /opt/ultimate-recon/
 
 RUN chmod +x /opt/ultimate-recon/run.sh /opt/ultimate-recon/setup.sh && \
