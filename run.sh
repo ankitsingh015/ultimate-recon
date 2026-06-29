@@ -89,7 +89,7 @@ if [ "$USE_DOCKER" = true ] || ([ "$USE_NATIVE" != true ] && command -v docker &
     echo -e "${GREEN}[*] Running container...${NC}"
     docker run --rm \
         --network host \
-        -v "$OUTPUT_DIR:/opt/ultimate-recon/output" \
+        -v "$OUTPUT_DIR:/opt/ultimate-recon/workspaces" \
         -v "$CONFIG_DIR:/opt/ultimate-recon/config" \
         -e PYTHONUNBUFFERED=1 \
         ultimate-recon:latest \
