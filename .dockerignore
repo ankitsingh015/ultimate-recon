@@ -10,7 +10,6 @@ results/
 screenshots/
 workspaces/
 wordlists/
-web-ui/
 .venv/
 venv/
 *.md
